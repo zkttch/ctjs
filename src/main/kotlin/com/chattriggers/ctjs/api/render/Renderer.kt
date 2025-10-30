@@ -462,25 +462,38 @@ object Renderer {
     }
 
     @JvmStatic
-    fun drawLine(
-        color: Long,
-        x1: Float,
-        y1: Float,
-        x2: Float,
-        y2: Float,
-        thickness: Float,
-    ) {
-        val theta = -atan2(y2 - y1, x2 - x1)
-        val i = sin(theta) * (thickness / 2)
-        val j = cos(theta) * (thickness / 2)
-
-        begin(vertexFormat = VertexFormat.POSITION_COLOR)
-        pos(x1 + i, y1 + j, 0f).color(color)
-        pos(x2 + i, y2 + j, 0f).color(color)
-        pos(x2 - i, y2 - j, 0f).color(color)
-        pos(x1 - i, y1 - j, 0f).color(color)
-        draw()
-    }
+  fun drawLine(
+    long color,
+    float x1, float y1, float z1,
+    float x2, float y2, float z2,
+    float thickness
+) {
+    Renderer.pushMatrix()
+        .disableDepth()
+        .disableCull();
+    
+    RenderSystem.lineWidth(thickness);
+    
+    int colorInt = (int) color;
+    Color colorObj = new Color(colorInt, true);
+    float r = colorObj.getRed() / 255.0f;
+    float g = colorObj.getGreen() / 255.0f;
+    float b = colorObj.getBlue() / 255.0f;
+    float a = colorObj.getAlpha() / 255.0f;
+    
+    Vector3f normalVec = new Vector3f(x2 - x1, y2 - y1, z2 - z1).normalize();
+    
+    begin(Renderer.DrawMode.LINES, Renderer.VertexFormat.LINES, Renderer.RenderSnippet.RENDERTYPE_LINES_SNIPPET);
+    pos(x1, y1, z1).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z);
+    pos(x2, y2, z2).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z);
+    draw();
+    
+    RenderSystem.lineWidth(1f);
+    Renderer
+        .enableCull()
+        .enableDepth()
+        .popMatrix();
+}
 
     @JvmStatic
     fun drawCircle(
