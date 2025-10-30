@@ -31,6 +31,7 @@ import net.minecraft.client.util.math.MatrixStack
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Quaternionf
+import org.joml.Vector3f
 import org.mozilla.javascript.NativeObject
 import java.awt.Color
 import java.util.*
@@ -461,45 +462,38 @@ object Renderer {
         draw()
     }
 
-@JvmStatic
-fun drawLine(
-    color: Long,
-    x1: Float, y1: Float, z1: Float,
-    x2: Float, y2: Float, z2: Float,
-    thickness: Float
-) {
-    Renderer.pushMatrix()
-        .disableDepth()
-        .disableCull()
-    
-    RenderSystem.lineWidth(thickness)
-    
-    val colorInt = color.toInt()
-    val colorObj = Color(colorInt, true)
-    val r = colorObj.red / 255.0f
-    val g = colorObj.green / 255.0f
-    val b = colorObj.blue / 255.0f
-    val a = colorObj.alpha / 255.0f
-    
-    // Fix: Manually implement normalize functionality since Vec3f.normalize() doesn't exist
-    val dx = x2 - x1
-    val dy = y2 - y1
-    val dz = z2 - z1
-    val length = sqrt(dx * dx + dy * dy + dz * dz)
-    val normalVec = if (length > 0) Vec3f(dx / length, dy / length, dz / length) else Vec3f(1f, 0f, 0f)
-    
-    begin(DrawMode.LINES, VertexFormat.LINES, RenderSnippet.RENDERTYPE_LINES_SNIPPET)
-    pos(x1, y1, z1).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
-    pos(x2, y2, z2).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
-    draw()
-    
-    RenderSystem.lineWidth(1f)
-    Renderer
-        .enableCull()
-        .enableDepth()
-        .popMatrix()
-}
-    
+    @JvmStatic
+    fun drawLine(
+        color: Long,
+        x1: Float,
+        y1: Float,
+        z1: Float,
+        x2: Float,
+        y2: Float,
+        z2: Float,
+        thickness: Float,
+    ) {
+        Renderer.pushMatrix()
+            .disableDepth()
+            .disableCull()
+        RenderSystem.lineWidth(thickness)
+
+        val (r, g, b, a) = Color(color.toInt(), true)
+
+        val normalVec = Vector3f(x2 - x1, y2 - y1, z2 - z1).normalize()
+
+        begin(Renderer.DrawMode.LINES, Renderer.VertexFormat.LINES, Renderer.RenderSnippet.RENDERTYPE_LINES_SNIPPET)
+        pos(x1, y1, z1).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
+        pos(x2, y2, z2).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
+        draw()
+
+        RenderSystem.lineWidth(1f)
+        Renderer
+            .enableCull()
+            .enableDepth()
+            .popMatrix()
+    }
+
     @JvmStatic
     fun drawCircle(
         color: Long,
