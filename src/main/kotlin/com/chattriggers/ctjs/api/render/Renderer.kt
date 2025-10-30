@@ -31,7 +31,6 @@ import net.minecraft.client.util.math.MatrixStack
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Quaternionf
-import org.joml.Vector3f
 import org.mozilla.javascript.NativeObject
 import java.awt.Color
 import java.util.*
@@ -467,31 +466,20 @@ object Renderer {
         color: Long,
         x1: Float,
         y1: Float,
-        z1: Float,
         x2: Float,
         y2: Float,
-        z2: Float,
         thickness: Float,
     ) {
-        Renderer.pushMatrix()
-            .disableDepth()
-            .disableCull()
-        RenderSystem.lineWidth(thickness)
+        val theta = -atan2(y2 - y1, x2 - x1)
+        val i = sin(theta) * (thickness / 2)
+        val j = cos(theta) * (thickness / 2)
 
-        val (r, g, b, a) = Color(color.toInt(), true)
-
-        val normalVec = Vector3f(x2 - x1, y2 - y1, z2 - z1).normalize()
-
-        begin(Renderer.DrawMode.LINES, Renderer.VertexFormat.LINES, Renderer.RenderSnippet.RENDERTYPE_LINES_SNIPPET)
-        pos(x1, y1, z1).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
-        pos(x2, y2, z2).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
+        begin(vertexFormat = VertexFormat.POSITION_COLOR)
+        pos(x1 + i, y1 + j, 0f).color(color)
+        pos(x2 + i, y2 + j, 0f).color(color)
+        pos(x2 - i, y2 - j, 0f).color(color)
+        pos(x1 - i, y1 - j, 0f).color(color)
         draw()
-
-        RenderSystem.lineWidth(1f)
-        Renderer
-            .enableCull()
-            .enableDepth()
-            .popMatrix()
     }
 
     @JvmStatic
