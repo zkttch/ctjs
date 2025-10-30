@@ -461,7 +461,6 @@ object Renderer {
         draw()
     }
 
-    @JvmStatic
 @JvmStatic
 fun drawLine(
     color: Long,
@@ -482,7 +481,12 @@ fun drawLine(
     val b = colorObj.blue / 255.0f
     val a = colorObj.alpha / 255.0f
     
-    val normalVec = Vec3f(x2 - x1, y2 - y1, z2 - z1).normalize()
+    // Fix: Manually implement normalize functionality since Vec3f.normalize() doesn't exist
+    val dx = x2 - x1
+    val dy = y2 - y1
+    val dz = z2 - z1
+    val length = sqrt(dx * dx + dy * dy + dz * dz)
+    val normalVec = if (length > 0) Vec3f(dx / length, dy / length, dz / length) else Vec3f(1f, 0f, 0f)
     
     begin(DrawMode.LINES, VertexFormat.LINES, RenderSnippet.RENDERTYPE_LINES_SNIPPET)
     pos(x1, y1, z1).color(r, g, b, a).normal(normalVec.x, normalVec.y, normalVec.z)
@@ -495,6 +499,7 @@ fun drawLine(
         .enableDepth()
         .popMatrix()
 }
+    
     @JvmStatic
     fun drawCircle(
         color: Long,
